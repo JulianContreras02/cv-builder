@@ -1,196 +1,233 @@
-# HojaDeVida — editor gratuito de hojas de vida
+# HojaDeVida: free resume builder
 
-Editor de hojas de vida (CV) que corre completamente en el navegador. No necesita servidor,
-base de datos ni cuenta: los datos se guardan en el navegador de cada persona y el PDF se
-genera con la impresión nativa del navegador (texto vectorial, seleccionable, sin marcas de agua).
+**English** · [Español](README.es.md)
 
-## Qué hace
+[![Deploy to GitHub Pages](https://github.com/JulianContreras02/cv-builder/actions/workflows/pages.yml/badge.svg)](https://github.com/JulianContreras02/cv-builder/actions/workflows/pages.yml)
+![No build step](https://img.shields.io/badge/build-none-brightgreen)
+![Vanilla JS](https://img.shields.io/badge/JavaScript-vanilla-f7df1e)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-- **Edición directa sobre la hoja**: cada texto es editable con un clic (nombre, contactos,
-  títulos de sección, cargos, fechas, descripciones…). Enter pasa al siguiente campo.
-- **Edición desde el panel**: cada sección de la lista se despliega y muestra sus entradas con
-  todos sus campos. Lo que escribes en el panel se refleja en la hoja y viceversa.
-- **Selector de fechas**: en cualquier campo de fechas (botón de calendario en el panel, o el
-  botón "Elegir fechas" que aparece al hacer clic en la hoja) eliges precisión por año, mes
-  (cuadrícula de meses) o día (calendario), rango o fecha única, "Actual" para lo que sigue en
-  curso, y el formato de salida (Mar 2022, Marzo 2022, 03/2022…). El texto resultante sigue
-  siendo editable a mano.
-- **Formato dentro de las descripciones**: al seleccionar texto aparece una barra flotante con
-  negrita, cursiva, subrayado, listas y enlaces. Escribir `- ` al inicio crea viñetas.
-- **Drag and drop**: reordena secciones y entradas arrastrando el ícono ⋮⋮ (en la hoja o en el
-  panel). Arrastra un tipo de sección desde "Agregar sección" al lugar exacto donde la quieres.
-  Funciona también en pantallas táctiles (SortableJS).
-- **Secciones**: perfil, experiencia, educación, habilidades, idiomas, proyectos,
-  certificaciones, premios, voluntariado, publicaciones, referencias, intereses, personalizada y
-  texto libre. Se pueden agregar varias veces, renombrar, ocultar sin borrar, duplicar entradas.
-- **Diseño**: fuente (del sistema o Google Fonts), tamaño en puntos del texto, del nombre y de los
-  títulos, interlineado, espacios, colores, papel (A4, Carta, Legal, Oficio) y márgenes en mm.
-- **Opciones por plantilla**: cada plantilla declara sus propias opciones (mayúsculas, líneas,
-  separadores…) y el panel las dibuja automáticamente.
-- **Foto opcional**: subir, forma (círculo, redondeada, cuadrada), tamaño y posición. Se guarda
-  redimensionada dentro de los datos.
-- **Guardar PDF**: botón "Guardar PDF" → diálogo de impresión → "Guardar como PDF". Tamaño de
-  papel y márgenes se aplican solos. Las entradas no se parten entre páginas.
-- **Exportar / importar**: JSON (todo, incluida la foto) y CSV (formato largo, abre en Excel o
-  Google Sheets). Ambos se pueden volver a importar. Ctrl+S descarga el JSON.
-- **Deshacer / rehacer** (Ctrl+Z, Ctrl+Y), modo claro / oscuro, interfaz en español e inglés,
-  guías aproximadas de salto de página, zoom.
-- **Privacidad**: nada sale del navegador. No hay cuentas, cookies ni tarjetas.
+**Live demo: <https://juliancontreras02.github.io/cv-builder/>**
 
-## Estructura
+A resume (CV) editor that runs entirely in the browser. You type directly on the page, pick a
+template, and save a PDF. There is no account, no server, no paywall and no credit card: the data
+stays in your own browser, and the PDF comes from the browser's print dialog, so the text is real,
+selectable vector text with no watermark.
+
+I built it because every resume site I tried asked for a credit card before letting me download my
+own document.
+
+![Editor with the Harvard template](docs/screenshots/editor-harvard.png)
+
+| Modern template, design panel | Minimal template, dark mode, Spanish UI |
+| --- | --- |
+| ![Modern template](docs/screenshots/editor-modern.png) | ![Minimal template in dark mode](docs/screenshots/editor-minimal-dark.png) |
+
+## Features
+
+- **Edit on the page.** Every piece of text is editable with one click: name, contacts, section
+  titles, job titles, dates, descriptions. Enter moves to the next field.
+- **Or edit from the side panel.** Each section expands into a form with all its fields; both
+  views stay in sync.
+- **Date picker** for every date field: year, month or day precision, ranges or single dates,
+  "Present", and several output formats (Mar 2022, March 2022, 03/2022…). The result is still
+  plain editable text.
+- **Rich text in descriptions.** Selecting text shows a floating toolbar (bold, italic, underline,
+  lists, links). Typing `- ` at the start of a line starts a bulleted list.
+- **Drag and drop** for sections and entries, on the page or in the panel, including touch screens
+  (SortableJS). New sections can be dragged from the palette to the exact spot.
+- **14 section types**: summary, experience, education, skills, languages, projects,
+  certifications, awards, volunteering, publications, references, interests, custom and free
+  text. Sections can repeat, be renamed, hidden without deleting, and entries can be duplicated.
+- **Three templates**: Harvard (classic, one column), Modern (two columns with an accent color)
+  and Minimal (dates in a left gutter, thin rules). Each template declares its own options and the
+  panel draws them automatically.
+- **Design controls**: font (system fonts or Google Fonts), text, name and heading sizes in
+  points, line height, spacing, colors, paper size (A4, Letter, Legal, Oficio) and margins in mm.
+- **Optional photo** with shape, size and position; it is resized and stored with the data.
+- **PDF export** through the print dialog. Paper size and margins are applied automatically and
+  entries are never split across pages.
+- **Import and export** as JSON (everything, photo included) or CSV (long format that opens in
+  Excel or Google Sheets). Both can be imported back. Ctrl+S downloads the JSON.
+- **Undo and redo** (Ctrl+Z, Ctrl+Y), light and dark themes, Spanish and English UI, approximate
+  page-break guides, zoom.
+- **Private by design**: nothing leaves the browser. No accounts, no cookies, no analytics.
+
+## How it works
+
+It is a static site with no build step and no npm: `index.html`, two stylesheets and a handful of
+plain JavaScript files loaded with `<script>` tags. They share one global namespace, `window.CV`.
 
 ```
 cv-builder/
-├── index.html              Esqueleto de la interfaz
+├── index.html              UI skeleton
 ├── css/
-│   ├── app.css             Editor (barra, panel, tema claro/oscuro)
-│   └── sheet.css           Hoja base, campos editables, controles, reglas @media print
-└── js/
-    ├── i18n.js             Textos de la interfaz (es, en)
-    ├── schema.js           Tipos de sección, placeholders y datos de ejemplo
-    ├── core.js             Estado, utilidades, historial, localStorage, mutaciones
-    ├── export.js           JSON / CSV (exportar e importar)
-    ├── render.js           Dibuja la hoja, edición directa, drag and drop, zoom, guías
-    ├── dates.js            Selector de fechas (año / mes / día, rango, "Actual", formato)
-    ├── app.js              Panel lateral, barra superior, atajos, arranque
-    └── templates/
-        ├── harvard.js      Plantilla Harvard (clásica, una columna)
-        ├── modern.js       Plantilla Moderna (dos columnas, color de acento)
-        └── minimal.js      Plantilla Minimalista (fechas en columna izquierda, líneas finas)
+│   ├── app.css             Editor chrome (top bar, panel, light/dark theme)
+│   └── sheet.css           Base page, editable fields, overlay controls, @media print rules
+├── js/
+│   ├── i18n.js             UI strings (es, en)
+│   ├── schema.js           Section types, placeholders and sample data
+│   ├── core.js             State, utilities, undo history, localStorage, mutations
+│   ├── export.js           JSON and CSV export/import
+│   ├── render.js           Draws the page, inline editing, drag and drop, zoom, page guides
+│   ├── dates.js            Date picker (year/month/day, range, "Present", format)
+│   ├── app.js              Side panel, top bar, shortcuts, startup
+│   └── templates/
+│       ├── harvard.js      Harvard template
+│       ├── modern.js       Modern template
+│       └── minimal.js      Minimal template
+└── .github/workflows/
+    └── pages.yml           Deploys index.html, css/ and js/ to GitHub Pages
 ```
 
-Sin build, sin npm. La única dependencia externa es SortableJS, cargada por CDN desde
-`index.html` (si no carga, el reordenamiento sigue disponible con las flechas del panel).
+The flow is one-directional:
 
-## Probar en local
+1. **State** (`core.js`) is a single plain object: `profile`, `settings` and an ordered list of
+   `sections`. Every mutation goes through a function that first pushes a snapshot onto the undo
+   history, then saves to `localStorage` (debounced) and emits a `state` event.
+2. **Rendering** (`render.js`) asks the active template for an HTML string and puts it on the page.
+   Templates never touch the DOM or the state directly; they build markup with helpers such as
+   `h.ed()` (editable text bound to a path like `sections.2.items.0.title`) and `h.section()`.
+3. **Editing** on the page writes back through the same path, so the panel and the page always
+   show the same data.
+4. **Untrusted input is sanitized.** Pasted content is inserted as plain text. Rich text from the
+   page and from imported files goes through an allowlist sanitizer (basic formatting tags only;
+   links limited to `http`, `mailto` and `tel`), and plain fields are escaped when rendered.
+5. **PDF**: the app writes an `@page` rule with the chosen paper size and margins, and print CSS
+   hides the editor. The browser's own "Save as PDF" produces the file.
 
-Basta con abrir `index.html` en el navegador. Para servirlo como en producción:
+The only external dependency is SortableJS, loaded from cdnjs. If it fails to load, reordering
+still works with the arrow buttons in the panel.
+
+## Run it locally
+
+Open `index.html` in a browser, or serve the folder to mirror production:
 
 ```bash
-python -m http.server 8080 --directory cv-builder
+python -m http.server 8080
 ```
 
-y entrar a <http://localhost:8080>.
+and go to <http://localhost:8080>.
 
-## Publicar gratis en tu dominio
+## Deployment
 
-Es un sitio estático: cualquier hosting gratuito sirve. Opciones probadas y sencillas:
+Any static host works, because deploying means copying three things: `index.html`, `css/` and
+`js/`.
 
-| Servicio | Cómo | Dominio propio |
-| --- | --- | --- |
-| **Cloudflare Pages** | Sube la carpeta (o conecta un repo de GitHub). | Sí, con DNS en Cloudflare es un clic. HTTPS automático. |
-| **GitHub Pages** | Repo público → Settings → Pages → rama `main`, carpeta `/`. | Sí: archivo `CNAME` con tu dominio + registro `CNAME` en tu DNS apuntando a `usuario.github.io`. |
-| **Netlify** | Arrastra la carpeta en app.netlify.com/drop. | Sí, en Domain settings. |
-| **Vercel** | `vercel deploy` o importar repo. | Sí. |
+This repository deploys to **GitHub Pages** with the workflow in
+[`.github/workflows/pages.yml`](.github/workflows/pages.yml): every push to `main` copies those
+files into a Pages artifact and publishes it. README, docs and screenshots are not part of the
+public site. The repository's Pages source is set to **GitHub Actions** (Settings → Pages).
 
-Pasos típicos con dominio comprado:
+### Adding a custom domain later
 
-1. Publica la carpeta en uno de los servicios anteriores.
-2. En el panel del servicio agrega tu dominio (por ejemplo `hojadevida.co`).
-3. En el proveedor donde compraste el dominio, crea los registros DNS que el servicio te indique
-   (normalmente un `CNAME` para `www` y un `A`/`ALIAS` para la raíz).
-4. Espera la propagación (minutos a horas). El certificado HTTPS se emite solo.
+The demo lives at `juliancontreras02.github.io/cv-builder/` as a *project site*. To serve it from
+your own domain (for example `example.com`):
 
-No hay datos de usuarios en el servidor, así que no necesitas backend, base de datos ni políticas
-de almacenamiento: todo vive en el `localStorage` del navegador de cada visitante.
+1. **Verify the domain** on your GitHub account first (profile Settings → Pages → Add a domain,
+   then create the TXT record it shows). This stops anyone else from claiming it on GitHub.
+2. **Create the DNS records** at your registrar:
+   - apex (`example.com`): four `A` records to `185.199.108.153`, `185.199.109.153`,
+     `185.199.110.153` and `185.199.111.153` (optionally the `AAAA` records
+     `2606:50c0:8000::153` through `2606:50c0:8003::153`);
+   - `www`: a `CNAME` record to `juliancontreras02.github.io` (no `/cv-builder` path).
+3. **Set the domain on this repository**: Settings → Pages → Custom domain, or
+   `gh api --method PUT repos/JulianContreras02/cv-builder/pages -f cname=example.com`.
+   With an Actions workflow no `CNAME` file is needed; GitHub ignores it.
+4. When the DNS check passes, tick **Enforce HTTPS**. The certificate is issued automatically.
 
-## Consejos para el PDF
+Things to know before switching:
 
-- Chrome / Edge: en el diálogo de impresión elige **Guardar como PDF**, deja márgenes en
-  "Predeterminado" (los pone la app) y desactiva **Encabezados y pies de página** para que no
-  salga la fecha ni la URL. "Gráficos de fondo" no hace falta.
-- El nombre del archivo sugerido es `Hoja de Vida - <Nombre>.pdf`.
-- Las líneas rojas punteadas de la vista previa son una **estimación** del salto de página. El
-  navegador decide el corte exacto, pero nunca parte una entrada por la mitad.
-- Las fuentes "(Google)" se descargan de Google Fonts al elegirlas; necesitan internet. Las demás
-  son fuentes del sistema y se ven igual en pantalla y en el PDF.
+- The app moves from `/cv-builder/` to the root of the domain. All paths in the app are relative,
+  so nothing in the code changes.
+- **Saved resumes do not follow the move.** `localStorage` belongs to an origin, so data saved on
+  `juliancontreras02.github.io` is not visible on the new domain. Announce the change and ask
+  users to use *Export → JSON* before and *Import* after.
+- If you later put a custom domain on the user site `JulianContreras02.github.io`, project sites
+  without their own domain are served under it (`your-domain/cv-builder/`). Giving this repository
+  its own domain avoids that.
 
-## Cómo agregar una plantilla
+Cloudflare Pages, Netlify or Vercel also work with the same folder if you ever want to move.
 
-1. Copia `js/templates/harvard.js` a `js/templates/<id>.js`.
-2. Cambia `id`, `name`, `description`, `defaults`, `options`, `css` y `render`.
-3. Añade `<script src="js/templates/<id>.js"></script>` en `index.html` después de `harvard.js`.
+## Tips for the PDF
 
-Aparecerá sola en el selector "Plantilla". Contrato mínimo que el núcleo necesita:
+- In Chrome or Edge choose **Save as PDF**, keep margins on "Default" (the app sets them) and turn
+  off **Headers and footers** so the date and URL are not printed.
+- The suggested file name is `Resume - <Name>.pdf` (`Hoja de Vida - <Nombre>.pdf` in Spanish).
+- The dashed red lines in the preview are an **estimate** of the page break. The browser decides
+  the exact break, but an entry is never split in half.
+- "(Google)" fonts are downloaded from Google Fonts when selected and need internet. The others
+  are system fonts and look the same on screen and in the PDF.
+
+## Adding a template
+
+1. Copy `js/templates/harvard.js` to `js/templates/<id>.js`.
+2. Change `id`, `name`, `description`, `defaults`, `options`, `css` and `render`.
+3. Add `<script src="js/templates/<id>.js"></script>` to `index.html` after the other templates.
+
+It shows up in the "Template" selector on its own. The minimum contract the core needs:
 
 ```js
 CV.registerTemplate({
-  id: 'moderna',
-  name: 'Moderna',
+  id: 'modern',
+  name: 'Modern',
   description: { es: '…', en: '…' },
-  defaults: { fontFamily: 'Arial, sans-serif', fontSize: 10.5 },   // opcional
-  options: [                                                       // opcional
+  defaults: { fontFamily: 'Arial, sans-serif', fontSize: 10.5 },   // optional
+  options: [                                                       // optional
     { key: 'accentBar', type: 'toggle', default: true, label: { es: 'Barra de color', en: 'Color bar' } },
     { key: 'cols', type: 'select', default: '1', label: { es: 'Columnas', en: 'Columns' },
       choices: [{ value: '1', label: '1' }, { value: '2', label: '2' }] },
   ],
-  css: '.tpl-moderna .cv-heading { … }',
+  css: '.tpl-modern .cv-heading { … }',
   render(state, h, opt) {
-    // 1) Contenedor de secciones marcado con data-sections (necesario para arrastrar).
-    // 2) Cada sección con h.section(sec, i, html), su título con h.heading(sec, i).
-    // 3) Entradas con h.items(sec, i, (item, basePath) => html) y textos con
-    //    h.ed(path, valor, {cls, ph}) o h.rich(path, valor, {cls, ph}).
-    // 4) Foto con h.photo().
+    // 1) A section container marked with data-sections (needed for drag and drop).
+    // 2) Each section through h.section(sec, i, html), its title through h.heading(sec, i).
+    // 3) Entries through h.items(sec, i, (item, basePath) => html) and text through
+    //    h.ed(path, value, {cls, ph}) or h.rich(path, value, {cls, ph}).
+    // 4) The photo through h.photo().
     const secs = state.sections.map((sec, i) => sec.visible === false ? '' :
       h.section(sec, i, h.heading(sec, i) + this.renderBody(sec, i, h))).join('');
-    return '<div class="tpl-moderna" data-sections>' + header + secs + '</div>';
+    return '<div class="tpl-modern" data-sections>' + header + secs + '</div>';
   },
 });
 ```
 
-Los helpers `h.*` se definen en `js/render.js` y están comentados. Las variables CSS disponibles
-en la hoja son `--font`, `--fs`, `--fs-name`, `--fs-heading`, `--lh`, `--gap-section`,
-`--gap-item`, `--text`, `--accent`, `--photo-size` y los márgenes `--m-*`.
+The `h.*` helpers are defined and commented in `js/render.js`. The CSS variables available on the
+page are `--font`, `--fs`, `--fs-name`, `--fs-heading`, `--lh`, `--gap-section`, `--gap-item`,
+`--text`, `--accent`, `--photo-size` and the margins `--m-*`.
 
-Una plantilla a dos columnas tiene dos contenedores `data-sections` (ver `modern.js`): cada uno
-es su propio grupo de arrastre, así que las secciones se reordenan dentro de su columna y la
-columna la decide la plantilla por el tipo de sección. El orden relativo en el modelo se
-conserva, por lo que al cambiar a otra plantilla no se mezcla.
+A two-column template has two `data-sections` containers (see `modern.js`). Each one is its own
+drag group, so sections reorder within their column and the template decides the column by
+section type. The relative order in the model is preserved, so switching templates never mixes
+sections up.
 
-## Plantillas incluidas
+## Adding a section type
 
-- **Harvard**: una columna, sobria, la más aceptada por reclutadores y sistemas ATS. Opciones:
-  alineación del encabezado, mayúsculas, línea bajo títulos, separador de contactos.
-- **Moderna**: dos columnas. Lateral (izquierda o derecha, ancho ajustable) con foto, contactos
-  con íconos, habilidades, idiomas, certificaciones e intereses; principal con nombre en color
-  de acento, perfil, experiencia, educación, proyectos y el resto. Opciones: fondo de la columna
-  (tono suave, color sólido o solo línea), banda de color detrás del nombre, íconos, mayúsculas.
-- **Minimalista**: una columna con aire y tipografía ligera. Las fechas van en una columna
-  izquierda estrecha (o a la derecha si se desactiva), títulos de sección en gris con línea fina
-  encima, nombre grande y fino. Opciones: ancho de la columna de fechas, peso del nombre, estilo
-  de títulos, líneas, separador de contactos.
+In `js/schema.js`, add an entry to `CV.SECTION_TYPES` with a `layout` (`block`, `entry`, `line` or
+`compact`), `fields`, `label` and `ph`, and add its key to `CV.SECTION_ORDER`. The existing
+templates already know how to draw the four layouts.
 
-## Cómo agregar un tipo de sección
+## Data formats
 
-En `js/schema.js`, añade una entrada a `CV.SECTION_TYPES` con `layout` (`block`, `entry`,
-`line` o `compact`), `fields`, `label` y `ph`, y su clave a `CV.SECTION_ORDER`. Las plantillas
-existentes ya saben dibujar los cuatro layouts.
+**JSON** is the full state (`profile`, `settings`, `sections`) and the recommended backup format.
+Entries whose dates came from the picker also store `datesData` (`precision`, `format`, `range`,
+`current`, `start`, `end` in ISO format) so the picker reopens with the same values; the visible
+text is always in `dates`.
 
-## Formato de datos
-
-**JSON**: el estado completo (`profile`, `settings`, `sections`). Es el formato de respaldo
-recomendado. Las entradas con fechas elegidas en el selector guardan además `datesData`
-(`precision`, `format`, `range`, `current`, `start`, `end` en formato ISO) para reabrir el
-selector con los mismos valores; el texto visible siempre está en `dates`.
-
-**CSV** (formato largo, una fila por dato; la foto no se incluye):
+**CSV** uses a long format, one row per value (the photo is not included):
 
 ```
 scope,section_id,section_type,section_title,item_index,field,value
-profile,,,,,name,Laura Martínez
+profile,,,,,name,Alex Morgan
 settings,,,,,fontSize,11
-section,abc123,experience,Experiencia profesional,,visible,true
-section,abc123,experience,Experiencia profesional,0,org,Banco Andino
-section,abc123,experience,Experiencia profesional,0,description,"- Logro uno
-- Logro dos"
+section,abc123,experience,Professional Experience,,visible,true
+section,abc123,experience,Professional Experience,0,org,Andean Bank
+section,abc123,experience,Professional Experience,0,description,"- First achievement
+- Second achievement"
 ```
 
-Las descripciones se exportan como texto con `- ` por viñeta y vuelven a convertirse en listas
-al importar.
+Descriptions are exported as text with `- ` per bullet and turned back into lists on import.
 
-## Ideas para después
+## License
 
-- Más plantillas (moderna a dos columnas, minimalista, académica).
-- Carta de presentación con los mismos datos.
-- Compartir diseño por URL (estado comprimido en el enlace).
-- Modo sin conexión completo (service worker) y empaquetar SortableJS localmente.
+[MIT](LICENSE) © 2026 Julian Contreras
