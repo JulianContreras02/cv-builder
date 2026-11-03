@@ -1,28 +1,50 @@
-# Publishes the static site to GitHub Pages on every push to main.
-# There is no build step: the job copies only the files the browser needs
-# (index.html, assets/, css/, js/) into the Pages artifact, so README, docs and
-# screenshots stay out of the public site.
-name: Deploy to GitHub Pages
+# Tests every push and pull request, then publishes main to GitHub Pages.
+# There is no build step: the deploy job copies only the files the browser
+# needs (index.html, assets/, css/, js/) into the Pages artifact, so README,
+# docs, screenshots and tests stay out of the public site.
+name: CI
 
 on:
   push:
     branches: [main]
+  pull_request:
   workflow_dispatch:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
-
-# One deployment at a time; a newer push waits instead of cancelling a
-# deployment that is already in progress.
-concurrency:
-  group: pages
-  cancel-in-progress: false
 
 jobs:
-  deploy:
+  test:
     runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      # Node 22+ is needed for its built-in WebSocket client; no npm install.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Show the browser version
+        run: google-chrome --version
+
+      # Browser unit tests plus smoke tests of the real app, in the Google
+      # Chrome that the runner image already includes.
+      - name: Run the tests
+        run: node --test
+
+  deploy:
+    needs: test
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    # One deployment at a time; a newer push waits instead of cancelling a
+    # deployment that is already in progress.
+    concurrency:
+      group: pages
+      cancel-in-progress: false
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
