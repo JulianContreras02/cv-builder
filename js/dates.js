@@ -149,14 +149,19 @@
     const day = tokens.find((x) => /^\d{1,2}$/.test(x));
     const word = tokens.find((x) => /^[a-záéíóúñ]{3,}$/i.test(x));
     if (!word) return null;
+    const found = (idx, format) => ({ iso: year + '-' + pad(idx + 1) + (day ? '-' + pad(day) : ''), precision: day ? 'day' : 'month', format });
+    // Exact names first, so "Mar" reads as the short format even though "marzo" starts with it.
     for (const lang of ['es', 'en']) {
       for (const style of ['long', 'short']) {
-        const names = monthNames(lang, style).map((n) => n.toLowerCase());
-        const idx = names.findIndex((n) => n === word || n.startsWith(word.slice(0, 3)) && word.startsWith(n.slice(0, 3)));
-        if (idx >= 0) {
-          return { iso: year + '-' + pad(idx + 1) + (day ? '-' + pad(day) : ''), precision: day ? 'day' : 'month', format: style === 'long' ? 'long' : 'short' };
-        }
+        const idx = monthNames(lang, style).findIndex((n) => n.toLowerCase() === word);
+        if (idx >= 0) return found(idx, style);
       }
+    }
+    // Then variants such as "sept" or "marz": same first three letters as the full name.
+    for (const lang of ['es', 'en']) {
+      const short = monthNames(lang, 'short').map((n) => n.toLowerCase());
+      const idx = monthNames(lang, 'long').findIndex((n) => n.toLowerCase().startsWith(word.slice(0, 3)) && word.startsWith(n.toLowerCase().slice(0, 3)));
+      if (idx >= 0) return found(idx, word.length > short[idx].length ? 'long' : 'short');
     }
     return null;
   }
