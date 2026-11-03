@@ -10,7 +10,7 @@
 
   const tpl = {
     id: 'minimal',
-    name: 'Minimalista',
+    name: { es: 'Minimalista', en: 'Minimal' },
     description: {
       es: 'Una columna con aire y tipografía ligera: fechas en una columna izquierda, títulos discretos y líneas finas.',
       en: 'Airy single column with light typography: dates in a left column, subtle headings and thin rules.',

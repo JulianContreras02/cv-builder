@@ -6,7 +6,7 @@
 
    Contrato con las plantillas (js/templates/*.js):
      CV.registerTemplate({
-       id, name, description:{es,en},
+       id, name:{es,en}|'…', description:{es,en},
        defaults: { fontFamily, fontSize, … },   // ajustes sugeridos al elegirla
        options: [ { key, type:'toggle'|'select'|'range', default, label:{es,en}, choices?, min?, max?, step? } ],
        css: '…',                                 // estilos, idealmente bajo .tpl-<id>

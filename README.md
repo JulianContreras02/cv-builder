@@ -170,7 +170,7 @@ It shows up in the "Template" selector on its own. The minimum contract the core
 ```js
 CV.registerTemplate({
   id: 'modern',
-  name: 'Modern',
+  name: { es: 'Moderna', en: 'Modern' },                          // or a plain string
   description: { es: '…', en: '…' },
   defaults: { fontFamily: 'Arial, sans-serif', fontSize: 10.5 },   // optional
   options: [                                                       // optional

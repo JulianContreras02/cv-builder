@@ -30,7 +30,7 @@
 
   const tpl = {
     id: 'modern',
-    name: 'Moderna',
+    name: { es: 'Moderna', en: 'Modern' },
     description: {
       es: 'Dos columnas: lateral con foto, contactos y habilidades; principal con experiencia y educación. Color de acento configurable.',
       en: 'Two columns: sidebar with photo, contacts and skills; main column with experience and education. Configurable accent color.',

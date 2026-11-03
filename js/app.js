@@ -278,7 +278,7 @@
 
   function buildDesignPanel() {
     const p = $('#panel-design');
-    const tplOptions = CV.templateOrder.map((id) => '<option value="' + id + '">' + esc(CV.templates[id].name) + '</option>').join('');
+    const tplOptions = CV.templateOrder.map((id) => '<option value="' + id + '">' + esc(CV.L(CV.templates[id].name)) + '</option>').join('');
     const fontOptions = CV.FONTS.map((f) => '<option value="' + esc(f.value) + '">' + esc(f.label) + '</option>').join('') +
       '<option value="__custom">' + esc(t('type.custom')) + '</option>';
 
