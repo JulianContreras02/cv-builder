@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hoja de Vida — Editor gratuito</title>
+  <meta name="description" content="Crea tu hoja de vida gratis: edita directamente sobre la hoja, arrastra secciones, elige tipografía, márgenes y papel, y guarda en PDF. Tus datos nunca salen de tu navegador.">
+  <meta name="color-scheme" content="light dark">
+  <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="css/sheet.css">
+  <!-- Estas dos hojas de estilo las llena la aplicación en tiempo de ejecución -->
+  <style id="print-page">@page { size: A4; margin: 20mm; }</style>
+  <style id="template-css"></style>
+</head>
+<body>
+  <div class="app" id="app">
+
+    <!-- ======== Barra superior ======== -->
+    <header class="topbar">
+      <div class="brand">
+        <span class="logo" aria-hidden="true">CV</span>
+        <span class="brand-text"><span data-i18n="app.name">HojaDeVida</span> <small data-i18n="app.tagline">Editor gratuito</small></span>
+      </div>
+
+      <div class="tb-group" id="historyGroup">
+        <button type="button" class="btn icon" id="btnUndo" data-i18n-title="btn.undo" disabled></button>
+        <button type="button" class="btn icon" id="btnRedo" data-i18n-title="btn.redo" disabled></button>
+      </div>
+
+      <div class="tb-group tb-zoom">
+        <button type="button" class="btn icon" id="btnZoomOut" data-i18n-title="btn.zoomOut"></button>
+        <button type="button" class="btn" id="btnZoomFit" data-i18n-title="btn.zoomFit"><span id="zoomLabel">100%</span></button>
+        <button type="button" class="btn icon" id="btnZoomIn" data-i18n-title="btn.zoomIn"></button>
+        <span class="pages-label" id="pagesLabel"></span>
+      </div>
+
+      <div class="tb-group">
+        <button type="button" class="btn icon" id="btnTheme" data-i18n-title="btn.theme"></button>
+        <button type="button" class="btn" id="btnLang" data-i18n-title="btn.lang"><span id="langLabel">EN</span></button>
+      </div>
+
+      <div class="tb-group">
+        <button type="button" class="btn" id="btnImport" data-i18n-title="btn.import"><span class="ic" data-icon="upload"></span><span class="tb-text" data-i18n="btn.import">Importar</span></button>
+        <details class="menu" id="exportMenu">
+          <summary class="btn" data-i18n-title="btn.export"><span class="ic" data-icon="download"></span><span class="tb-text" data-i18n="btn.export">Exportar</span><span class="ic small" data-icon="chevron"></span></summary>
+          <div class="menu-list">
+            <button type="button" id="menuJson"><span class="ic" data-icon="json"></span><span data-i18n="menu.json">Datos en JSON</span></button>
+            <button type="button" id="menuCsv"><span class="ic" data-icon="table"></span><span data-i18n="menu.csv">Datos en CSV</span></button>
+            <hr>
+            <button type="button" id="menuSample"><span class="ic" data-icon="sparkle"></span><span data-i18n="menu.sample">Cargar ejemplo</span></button>
+            <button type="button" id="menuReset" class="danger"><span class="ic" data-icon="trash"></span><span data-i18n="menu.reset">Empezar de cero</span></button>
+          </div>
+        </details>
+        <button type="button" class="btn primary" id="btnPdf" data-i18n-title="btn.pdf"><span class="ic" data-icon="print"></span><span class="tb-text" data-i18n="btn.pdf">Guardar PDF</span></button>
+      </div>
+    </header>
+
+    <!-- ======== Panel lateral ======== -->
+    <aside class="sidebar" id="sidebar">
+      <nav class="tabs" role="tablist">
+        <button type="button" role="tab" data-tab="content" class="active" data-i18n="tab.content">Contenido</button>
+        <button type="button" role="tab" data-tab="design" data-i18n="tab.design">Diseño</button>
+      </nav>
+      <div class="panel active" id="panel-content" role="tabpanel"></div>
+      <div class="panel" id="panel-design" role="tabpanel"></div>
+      <footer class="sidebar-footer">
+        <span class="ic" data-icon="lock"></span>
+        <span data-i18n="privacy">Tus datos se guardan solo en este navegador.</span>
+      </footer>
+    </aside>
+
+    <!-- ======== Lienzo con la hoja ======== -->
+    <main class="canvas" id="canvas">
+      <div class="sheet-wrap" id="sheetWrap">
+        <div id="sheet" class="sheet"></div>
+      </div>
+    </main>
+
+    <button type="button" class="fab" id="fabEdit" aria-label="Editar"></button>
+  </div>
+
+  <!-- Barra flotante de formato (negrita, cursiva, listas…) -->
+  <div id="floatingToolbar" class="floating-toolbar" hidden>
+    <button type="button" data-cmd="bold" data-i18n-title="fmt.bold"><b>B</b></button>
+    <button type="button" data-cmd="italic" data-i18n-title="fmt.italic"><i>I</i></button>
+    <button type="button" data-cmd="underline" data-i18n-title="fmt.underline"><u>U</u></button>
+    <span class="sep"></span>
+    <button type="button" data-cmd="insertUnorderedList" data-i18n-title="fmt.ul"><span class="ic" data-icon="ul"></span></button>
+    <button type="button" data-cmd="insertOrderedList" data-i18n-title="fmt.ol"><span class="ic" data-icon="ol"></span></button>
+    <span class="sep"></span>
+    <button type="button" data-cmd="createLink" data-i18n-title="fmt.link"><span class="ic" data-icon="link"></span></button>
+    <button type="button" data-cmd="removeFormat" data-i18n-title="fmt.clear"><span class="ic" data-icon="eraser"></span></button>
+  </div>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <input type="file" id="fileImport" accept=".json,.csv,application/json,text/csv" hidden>
+  <input type="file" id="filePhoto" accept="image/*" hidden>
+
+  <!-- Dependencias: SortableJS para el drag and drop (también en pantallas táctiles) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.6/Sortable.min.js" crossorigin="anonymous"></script>
+  <!-- Núcleo -->
+  <script src="js/i18n.js"></script>
+  <script src="js/schema.js"></script>
+  <script src="js/core.js"></script>
+  <script src="js/export.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/dates.js"></script>
+  <!-- Plantillas: para agregar una nueva, crea js/templates/<id>.js y añade su <script> aquí -->
+  <script src="js/templates/harvard.js"></script>
+  <script src="js/templates/modern.js"></script>
+  <script src="js/templates/minimal.js"></script>
+  <!-- Interfaz -->
+  <script src="js/app.js"></script>
+</body>
+</html>
