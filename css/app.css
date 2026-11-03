@@ -346,3 +346,37 @@ input[type="range"] { width: 100%; accent-color: var(--primary); margin: 0; }
   .tb-zoom { display: none; }
   .brand-text { display: none; }
 }
+
+/* ---------- ATS tab ---------- */
+.ats-summary { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; }
+.ats-count {
+  font-size: 12px; font-weight: 600; padding: 3px 9px 3px 7px; border-radius: 999px;
+  background: var(--panel-2); border: 1px solid var(--border); display: inline-flex; align-items: center; gap: 6px;
+}
+.ats-count::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--ats-color); }
+.ats-list { list-style: none; margin: 0 0 14px; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.ats-item {
+  display: grid; grid-template-columns: 20px 1fr; gap: 10px; align-items: start;
+  padding: 10px 12px; border: 1px solid var(--border); border-left: 3px solid var(--ats-color);
+  border-radius: 8px; background: var(--panel);
+}
+.ats-item strong { font-size: 13px; line-height: 20px; }
+.ats-item p { margin: 2px 0 0; font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+.ats-item .btn { margin-top: 8px; }
+.ats-icon {
+  width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center;
+  font-size: 12px; font-weight: 800; color: #fff; background: var(--ats-color);
+}
+.level-error { --ats-color: var(--danger); }
+.level-warn { --ats-color: #d97706; }
+.level-info { --ats-color: var(--primary); }
+.level-ok { --ats-color: #16a34a; }
+.ats-passed { margin-bottom: 18px; }
+.ats-passed summary { cursor: pointer; font-size: 12.5px; color: var(--muted); margin-bottom: 8px; }
+.ats-passed .ats-item { padding: 6px 10px; }
+.ats-text {
+  white-space: pre-wrap; overflow-wrap: anywhere; font: 11.5px/1.5 ui-monospace, Consolas, 'Courier New', monospace;
+  background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px;
+  padding: 10px 12px; max-height: 340px; overflow: auto; margin: 8px 0 0; color: var(--text);
+}
+.ats-text:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }

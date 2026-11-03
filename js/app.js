@@ -427,6 +427,7 @@
     syncSettingsInputs();
     CV.render();
   }
+  CV.switchTemplate = switchTemplate;
 
   function resetDesign() {
     CV.commit();
@@ -564,7 +565,9 @@
     $$('.panel').forEach((p) => p.classList.toggle('active', p.id === 'panel-' + name));
     CV.ui.tab = name;
     CV.saveUI();
+    if (name === 'ats' && CV.ats) CV.ats.refresh();
   }
+  CV.selectTab = selectTab;
 
   function refreshHistoryButtons() {
     $('#btnUndo').disabled = !CV.canUndo();
@@ -742,6 +745,7 @@
   function buildPanels() {
     buildContentPanel();
     buildDesignPanel();
+    if (CV.ats) CV.ats.buildPanel();
   }
 
   function init() {
@@ -761,7 +765,7 @@
     bindSidebar();
     bindKeys();
     bindPrint();
-    selectTab(CV.ui.tab === 'design' ? 'design' : 'content');
+    selectTab(['design', 'ats'].includes(CV.ui.tab) ? CV.ui.tab : 'content');
 
     CV.on('state', (p) => {
       CV.render(p || {});

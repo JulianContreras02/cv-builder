@@ -102,6 +102,11 @@
 }
 .cv-photo .photo-placeholder:hover { border-color: #2563eb; color: #2563eb; }
 
+/* ---------- ATS text extraction (js/ats.js) ----------
+   While ats.js reads the page, hide the same editor-only parts that printing hides. */
+.sheet.ats-reading .cv-actions, .sheet.ats-reading .page-guides, .sheet.ats-reading .cv-empty,
+.sheet.ats-reading .photo-placeholder, .sheet.ats-reading .ed:empty { display: none !important; }
+
 /* ---------- Impresión / PDF ---------- */
 @media print {
   html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; height: auto !important; overflow: visible !important; }
