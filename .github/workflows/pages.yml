@@ -1,6 +1,6 @@
 # Publishes the static site to GitHub Pages on every push to main.
 # There is no build step: the job copies only the files the browser needs
-# (index.html, css/, js/) into the Pages artifact, so README, docs and
+# (index.html, assets/, css/, js/) into the Pages artifact, so README, docs and
 # screenshots stay out of the public site.
 name: Deploy to GitHub Pages
 
@@ -32,7 +32,7 @@ jobs:
       - name: Collect the site files
         run: |
           mkdir _site
-          cp -r index.html css js _site/
+          cp -r index.html assets css js _site/
 
       - uses: actions/configure-pages@v6
 

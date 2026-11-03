@@ -63,7 +63,8 @@ archivos de JavaScript puro cargados con `<script>`. Comparten un único espacio
 
 ```
 cv-builder/
-├── index.html              Esqueleto de la interfaz
+├── index.html              Esqueleto de la interfaz, etiquetas de vista previa (Open Graph)
+├── assets/                 favicon.svg y og-image.png (vista previa del enlace)
 ├── css/
 │   ├── app.css             Editor (barra, panel, tema claro/oscuro)
 │   └── sheet.css           Hoja base, campos editables, controles, reglas @media print
@@ -80,7 +81,7 @@ cv-builder/
 │       ├── modern.js       Plantilla Moderna
 │       └── minimal.js      Plantilla Minimalista
 └── .github/workflows/
-    └── pages.yml           Publica index.html, css/ y js/ en GitHub Pages
+    └── pages.yml           Publica index.html, assets/, css/ y js/ en GitHub Pages
 ```
 
 El flujo va en un solo sentido:
@@ -114,8 +115,8 @@ y entrar a <http://localhost:8080>.
 
 ## Publicación
 
-Sirve cualquier hosting estático, porque publicar es copiar tres cosas: `index.html`, `css/` y
-`js/`.
+Sirve cualquier hosting estático, porque publicar es copiar cuatro cosas: `index.html`,
+`assets/`, `css/` y `js/`.
 
 Este repositorio se publica en **GitHub Pages** con el workflow
 [`.github/workflows/pages.yml`](.github/workflows/pages.yml): cada push a `main` copia esos
@@ -143,7 +144,8 @@ desde un dominio propio (por ejemplo `ejemplo.co`):
 Antes de cambiar, ten en cuenta:
 
 - La app pasa de `/cv-builder/` a la raíz del dominio. Todas las rutas son relativas, así que el
-  código no cambia.
+  código sigue funcionando. La única excepción son las etiquetas de vista previa en `index.html`:
+  `og:url` y `og:image` tienen que ser absolutas, así que cámbialas al dominio nuevo.
 - **Las hojas de vida guardadas no se mudan solas.** `localStorage` pertenece a un origen, así que
   lo guardado en `juliancontreras02.github.io` no se ve en el dominio nuevo. Avisa del cambio y
   pide a los usuarios *Exportar → JSON* antes e *Importar* después.

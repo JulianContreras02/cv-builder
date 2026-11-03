@@ -60,7 +60,8 @@ plain JavaScript files loaded with `<script>` tags. They share one global namesp
 
 ```
 cv-builder/
-├── index.html              UI skeleton
+├── index.html              UI skeleton, link-preview (Open Graph) tags
+├── assets/                 favicon.svg and og-image.png (link preview)
 ├── css/
 │   ├── app.css             Editor chrome (top bar, panel, light/dark theme)
 │   └── sheet.css           Base page, editable fields, overlay controls, @media print rules
@@ -77,7 +78,7 @@ cv-builder/
 │       ├── modern.js       Modern template
 │       └── minimal.js      Minimal template
 └── .github/workflows/
-    └── pages.yml           Deploys index.html, css/ and js/ to GitHub Pages
+    └── pages.yml           Deploys index.html, assets/, css/ and js/ to GitHub Pages
 ```
 
 The flow is one-directional:
@@ -111,8 +112,8 @@ and go to <http://localhost:8080>.
 
 ## Deployment
 
-Any static host works, because deploying means copying three things: `index.html`, `css/` and
-`js/`.
+Any static host works, because deploying means copying four things: `index.html`, `assets/`,
+`css/` and `js/`.
 
 This repository deploys to **GitHub Pages** with the workflow in
 [`.github/workflows/pages.yml`](.github/workflows/pages.yml): every push to `main` copies those
@@ -139,7 +140,8 @@ your own domain (for example `example.com`):
 Things to know before switching:
 
 - The app moves from `/cv-builder/` to the root of the domain. All paths in the app are relative,
-  so nothing in the code changes.
+  so the code keeps working. The only exception is the link-preview tags in `index.html`:
+  `og:url` and `og:image` must be absolute, so change them to the new domain.
 - **Saved resumes do not follow the move.** `localStorage` belongs to an origin, so data saved on
   `juliancontreras02.github.io` is not visible on the new domain. Announce the change and ask
   users to use *Export → JSON* before and *Import* after.
