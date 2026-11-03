@@ -35,6 +35,7 @@
         choices: [{ value: 'light', label: { es: 'Fino', en: 'Light' } }, { value: 'bold', label: { es: 'Negrita', en: 'Bold' } }] },
       { key: 'headingStyle', type: 'select', default: 'muted', label: { es: 'Títulos de sección', en: 'Section headings' },
         choices: [{ value: 'muted', label: { es: 'Gris discreto', en: 'Muted grey' } }, { value: 'accent', label: { es: 'Color de acento', en: 'Accent color' } }] },
+      { key: 'spacedHeadings', type: 'toggle', default: true, label: { es: 'Títulos con letras espaciadas (algunos ATS los leen mal)', en: 'Letter-spaced headings (some ATS misread them)' } },
       { key: 'rules', type: 'toggle', default: true, label: { es: 'Línea fina sobre cada sección', en: 'Thin rule above each section' } },
       { key: 'separator', type: 'select', default: '·', label: { es: 'Separador de la línea de contacto', en: 'Contact line separator' },
         choices: [{ value: '·', label: '·' }, { value: '|', label: '|' }, { value: '/', label: '/' }, { value: '•', label: '•' }] },
@@ -53,6 +54,7 @@
       '.tpl-minimal .contact-item:not(:last-child)::after { content: "  " var(--sep) "  "; white-space: pre; opacity: 0.6; }',
       '.tpl-minimal .cv-heading { font-size: var(--fs-heading); font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #8a8a8a; margin: var(--gap-section) 0 2.2mm; padding-top: 2mm; line-height: 1.2; }',
       '.tpl-minimal.head-accent .cv-heading { color: var(--accent); }',
+      '.tpl-minimal.tight-headings .cv-heading { letter-spacing: 0.03em; }',
       '.tpl-minimal.rules .cv-heading { border-top: 0.25mm solid rgba(0, 0, 0, 0.18); }',
       '.tpl-minimal .cv-header + .cv-section .cv-heading { margin-top: 0; }',
       '.tpl-minimal .cv-item + .cv-item { margin-top: var(--gap-item); }',
@@ -81,6 +83,7 @@
         'name-' + (opt.nameWeight === 'bold' ? 'bold' : 'light'),
         'head-' + (opt.headingStyle === 'accent' ? 'accent' : 'muted'),
         opt.rules ? 'rules' : '',
+        opt.spacedHeadings === false ? 'tight-headings' : '',
         opt.gutter ? 'with-gutter' : 'no-gutter',
       ].filter(Boolean).join(' ');
 
