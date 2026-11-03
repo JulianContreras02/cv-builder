@@ -2,7 +2,7 @@
 
 [English](README.md) · **Español**
 
-[![Deploy to GitHub Pages](https://github.com/JulianContreras02/cv-builder/actions/workflows/pages.yml/badge.svg)](https://github.com/JulianContreras02/cv-builder/actions/workflows/pages.yml)
+[![CI](https://github.com/JulianContreras02/cv-builder/actions/workflows/ci.yml/badge.svg)](https://github.com/JulianContreras02/cv-builder/actions/workflows/ci.yml)
 ![Sin compilación](https://img.shields.io/badge/build-ninguno-brightgreen)
 ![JavaScript puro](https://img.shields.io/badge/JavaScript-puro-f7df1e)
 [![Licencia: MIT](https://img.shields.io/badge/Licencia-MIT-blue.svg)](LICENSE)
@@ -80,8 +80,13 @@ cv-builder/
 │       ├── harvard.js      Plantilla Harvard
 │       ├── modern.js       Plantilla Moderna
 │       └── minimal.js      Plantilla Minimalista
+├── tests/
+│   ├── index.html          Página de pruebas (se abre en cualquier navegador)
+│   ├── harness.js          Arnés de pruebas mínimo, sin dependencias
+│   ├── specs/              Pruebas unitarias por módulo
+│   └── browser.test.mjs    Corre la página y las pruebas de humo en Chrome headless
 └── .github/workflows/
-    └── pages.yml           Publica index.html, assets/, css/ y js/ en GitHub Pages
+    └── ci.yml              Corre las pruebas y luego publica index.html, assets/, css/ y js/
 ```
 
 El flujo va en un solo sentido:
@@ -113,15 +118,43 @@ python -m http.server 8080
 
 y entrar a <http://localhost:8080>.
 
+## Pruebas
+
+Las pruebas siguen la misma idea de no compilar ni usar npm:
+
+- **Pruebas unitarias** que corren en el navegador. Abre `tests/index.html` (basta con doble clic)
+  y la página muestra los resultados. Cubren el saneado de HTML, la normalización del estado,
+  deshacer/rehacer, ida y vuelta de JSON y CSV, el lector y formateador de fechas, las
+  traducciones, los datos de ejemplo y el contrato de las plantillas (cada plantilla dibuja todas
+  las secciones visibles, cada campo editable apunta a un dato real y el texto del perfil se escapa).
+- **Pruebas de humo** que manejan la app real en Chrome headless: cada plantilla en cada idioma
+  debe dibujarse sin errores en la consola, ocultar el editor y los campos vacíos al imprimir e
+  imprimirse en A4; el papel elegido en el panel de diseño debe llegar al PDF; importar un JSON
+  con el botón Importar debe reemplazar la hoja de vida; y una hoja en blanco debe imprimirse sin
+  textos de ayuda.
+
+Se corren ambas desde la raíz del repositorio con Node 22 o superior y Chrome instalado (define
+`CHROME_PATH` si Chrome está en otra ruta):
+
+```bash
+node --test
+```
+
+[`tests/browser.test.mjs`](tests/browser.test.mjs) levanta un servidor estático, abre Chrome, carga
+la página de pruebas y la app, y habla con Chrome por el protocolo DevTools usando el `WebSocket`
+que trae Node. La impresión usa el mismo motor que el "Guardar como PDF" de Chrome; el número de
+páginas y el tamaño del papel se leen directamente del PDF.
+
 ## Publicación
 
 Sirve cualquier hosting estático, porque publicar es copiar cuatro cosas: `index.html`,
 `assets/`, `css/` y `js/`.
 
 Este repositorio se publica en **GitHub Pages** con el workflow
-[`.github/workflows/pages.yml`](.github/workflows/pages.yml): cada push a `main` copia esos
-archivos en un artefacto de Pages y lo publica. El README, la documentación y las capturas no
-forman parte del sitio público. En el repositorio, la fuente de Pages es **GitHub Actions**
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml): cada push y pull request corre las pruebas,
+y cuando pasan en `main` el job de despliegue copia esos archivos en un artefacto de Pages y lo
+publica. Una prueba que falla nunca llega a la demo. El README, la documentación, las capturas y
+las pruebas no forman parte del sitio público. En el repositorio, la fuente de Pages es **GitHub Actions**
 (Settings → Pages).
 
 ### Poner un dominio propio más adelante

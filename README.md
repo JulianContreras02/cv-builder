@@ -2,7 +2,7 @@
 
 **English** · [Español](README.es.md)
 
-[![Deploy to GitHub Pages](https://github.com/JulianContreras02/cv-builder/actions/workflows/pages.yml/badge.svg)](https://github.com/JulianContreras02/cv-builder/actions/workflows/pages.yml)
+[![CI](https://github.com/JulianContreras02/cv-builder/actions/workflows/ci.yml/badge.svg)](https://github.com/JulianContreras02/cv-builder/actions/workflows/ci.yml)
 ![No build step](https://img.shields.io/badge/build-none-brightgreen)
 ![Vanilla JS](https://img.shields.io/badge/JavaScript-vanilla-f7df1e)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -77,8 +77,13 @@ cv-builder/
 │       ├── harvard.js      Harvard template
 │       ├── modern.js       Modern template
 │       └── minimal.js      Minimal template
+├── tests/
+│   ├── index.html          Browser test page (open it in any browser)
+│   ├── harness.js          Tiny test harness, no dependencies
+│   ├── specs/              Unit tests per module
+│   └── browser.test.mjs    Runs the page and smoke tests in headless Chrome
 └── .github/workflows/
-    └── pages.yml           Deploys index.html, assets/, css/ and js/ to GitHub Pages
+    └── ci.yml              Runs the tests, then deploys index.html, assets/, css/ and js/
 ```
 
 The flow is one-directional:
@@ -110,14 +115,41 @@ python -m http.server 8080
 
 and go to <http://localhost:8080>.
 
+## Tests
+
+The tests keep the no-build, no-npm approach:
+
+- **Unit tests** run in the browser. Open `tests/index.html` (double-click is enough) and the page
+  lists the results. They cover the HTML sanitizer, state normalization, undo/redo, JSON and CSV
+  round-trips, the date parser and formatter, translations, sample data, and the template
+  contract (every template renders every visible section, every editable field points at real
+  data, and profile text is escaped).
+- **Smoke tests** drive the real app in headless Chrome: each template in each language must
+  render without console errors, hide the editor and empty fields in print, and print to A4;
+  the paper size picked in the design panel must reach the PDF; importing a JSON file through the
+  Import button must replace the resume; and a blank resume must print without placeholder text.
+
+Run both from the repository root with Node 22 or newer and Chrome installed (set `CHROME_PATH` if
+Chrome is somewhere unusual):
+
+```bash
+node --test
+```
+
+[`tests/browser.test.mjs`](tests/browser.test.mjs) starts a static server, launches Chrome, opens
+the test page and the app, and talks to Chrome through the DevTools protocol with Node's built-in
+`WebSocket`. Printing uses the same engine as Chrome's "Save as PDF"; the page count and paper size
+are read straight from the PDF.
+
 ## Deployment
 
 Any static host works, because deploying means copying four things: `index.html`, `assets/`,
 `css/` and `js/`.
 
 This repository deploys to **GitHub Pages** with the workflow in
-[`.github/workflows/pages.yml`](.github/workflows/pages.yml): every push to `main` copies those
-files into a Pages artifact and publishes it. README, docs and screenshots are not part of the
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml): every push and pull request runs the tests,
+and when they pass on `main` the deploy job copies those files into a Pages artifact and publishes
+it. A failing test never reaches the demo. README, docs, screenshots and tests are not part of the
 public site. The repository's Pages source is set to **GitHub Actions** (Settings → Pages).
 
 ### Adding a custom domain later
