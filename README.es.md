@@ -43,6 +43,9 @@ dejarme descargar mi propio documento.
 - **Tres plantillas**: Harvard (clásica, una columna), Moderna (dos columnas con color de acento)
   y Minimalista (fechas en una columna izquierda, líneas finas). Cada plantilla declara sus propias
   opciones y el panel las dibuja automáticamente.
+- **Revisión ATS**: una pestaña del panel revisa lo que buscan los sistemas que filtran hojas de
+  vida, explica cada resultado, ofrece arreglos de un clic y muestra el texto en el orden en que
+  lo lee un analizador (ver [Revisión ATS](#revisión-ats)).
 - **Diseño**: fuente (del sistema o Google Fonts), tamaño en puntos del texto, del nombre y de los
   títulos, interlineado, espacios, colores, papel (A4, Carta, Legal, Oficio) y márgenes en mm.
 - **Foto opcional**: forma (círculo, redondeada, cuadrada), tamaño y posición. Se guarda
@@ -54,6 +57,47 @@ dejarme descargar mi propio documento.
 - **Deshacer y rehacer** (Ctrl+Z, Ctrl+Y), modo claro y oscuro, interfaz en español e inglés,
   guías aproximadas de salto de página, zoom.
 - **Privacidad**: nada sale del navegador. No hay cuentas, cookies ni analítica.
+
+## Revisión ATS
+
+La mayoría de postulaciones pasan por un ATS (sistema de seguimiento de candidatos) antes de que
+una persona las lea. La pestaña **ATS** del panel lateral revisa la hoja de vida con reglas que
+comparten la mayoría de esos sistemas, explica cada resultado y, cuando se puede, ofrece un
+arreglo de un clic.
+
+![Pestaña ATS con la plantilla Moderna](docs/screenshots/ats-review.png)
+
+| Comprobación | Nivel | Por qué importa | Arreglo |
+| --- | --- | --- | --- |
+| Nombre, correo (y su formato) | Por corregir | El ATS crea la ficha del candidato con ellos | Ir al campo |
+| Teléfono | Por mejorar | Muchos procesos empiezan con una llamada | Ir al campo |
+| Ciudad | Sugerencia | Los reclutadores filtran por ubicación | Ir al campo |
+| Experiencia, o proyectos/voluntariado | Por mejorar | Extrae cargos, empresas y fechas | Agregar la sección |
+| Fechas en experiencia y educación | Por mejorar | Con ellas calcula los años de experiencia | Ir a la primera que falta |
+| Habilidades | Por mejorar | Compara palabras clave con la oferta | Agregar la sección |
+| Perfil profesional | Sugerencia | Da contexto al ATS y al reclutador | Agregar la sección |
+| Títulos de sección estándar | Sugerencia | Reconoce las secciones por su título ("Mi camino" no) | Usar el título estándar |
+| Una sola columna | Por mejorar | Dos columnas se mezclan o se lee primero la lateral | Cambiar a Harvard |
+| El nombre se lee primero | Por mejorar | Podría tomar otra línea como el nombre | (se ve en el texto de abajo) |
+| Títulos con letras espaciadas | Por mejorar | Algunos leen "P E R F I L" | Apagar la opción de la plantilla |
+| Una o dos páginas | Por mejorar | Es lo que esperan la mayoría de reclutadores | (resumir lo más antiguo) |
+| Foto | Sugerencia | El ATS la ignora; la costumbre cambia por país | (ninguno) |
+
+Debajo, **Así lo lee un ATS** muestra el texto de la hoja en el orden en que queda en el PDF, que
+es el orden en que lo lee un analizador. Recorre la hoja dibujada con sus estilos calculados: aplica
+`text-transform`, conserva los separadores que pone el CSS (`•`, `|`), omite las partes del editor
+y los campos ocultos, y deja una línea en blanco entre secciones. El botón **Copiar texto** lo
+copia para los portales de empleo que piden la hoja de vida como texto.
+
+Las reglas están en [`js/ats.js`](js/ats.js): las de contenido leen los datos y las de diseño leen
+la hoja dibujada (cuántos contenedores `data-sections` hay, la primera línea del texto, el
+`letter-spacing` calculado de los títulos), así que una plantilla nueva se revisa sin código
+extra. Una plantilla puede ofrecer la opción `spacedHeadings`, como la Minimalista, y el arreglo
+la usará.
+
+Es una guía, no una emulación: cada ATS lee distinto, y la revisión nunca cambia el diseño por su
+cuenta. La plantilla Moderna sigue siendo buena opción cuando la hoja de vida va directo a una
+persona.
 
 ## Cómo funciona
 
@@ -75,6 +119,7 @@ cv-builder/
 │   ├── export.js           JSON / CSV (exportar e importar)
 │   ├── render.js           Dibuja la hoja, edición directa, arrastre, zoom, guías
 │   ├── dates.js            Selector de fechas (año / mes / día, rango, "Actual", formato)
+│   ├── ats.js              Revisión ATS: reglas, texto en orden de lectura, pestaña ATS
 │   ├── app.js              Panel lateral, barra superior, atajos, arranque
 │   └── templates/
 │       ├── harvard.js      Plantilla Harvard
@@ -125,13 +170,15 @@ Las pruebas siguen la misma idea de no compilar ni usar npm:
 - **Pruebas unitarias** que corren en el navegador. Abre `tests/index.html` (basta con doble clic)
   y la página muestra los resultados. Cubren el saneado de HTML, la normalización del estado,
   deshacer/rehacer, ida y vuelta de JSON y CSV, el lector y formateador de fechas, las
-  traducciones, los datos de ejemplo y el contrato de las plantillas (cada plantilla dibuja todas
+  traducciones, los datos de ejemplo, las reglas ATS y sus arreglos, la extracción del texto en
+  orden de lectura y el contrato de las plantillas (cada plantilla dibuja todas
   las secciones visibles, cada campo editable apunta a un dato real y el texto del perfil se escapa).
 - **Pruebas de humo** que manejan la app real en Chrome headless: cada plantilla en cada idioma
   debe dibujarse sin errores en la consola, ocultar el editor y los campos vacíos al imprimir e
   imprimirse en A4; el papel elegido en el panel de diseño debe llegar al PDF; importar un JSON
-  con el botón Importar debe reemplazar la hoja de vida; y una hoja en blanco debe imprimirse sin
-  textos de ayuda.
+  con el botón Importar debe reemplazar la hoja de vida; una hoja en blanco debe imprimirse sin
+  textos de ayuda; y la pestaña ATS debe aprobar Harvard, avisar de las dos columnas de Moderna y
+  del espaciado de Minimalista, aplicar sus arreglos y seguir lo que se edita en la hoja.
 
 Se corren ambas desde la raíz del repositorio con Node 22 o superior y Chrome instalado (define
 `CHROME_PATH` si Chrome está en otra ruta):
