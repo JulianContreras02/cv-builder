@@ -33,7 +33,7 @@
   });
 
   test('csvParse handles quotes, escaped quotes, line breaks and a BOM', () => {
-    eq(CV.csvParse('﻿a,b\r\n"x, y","say ""hi"""\n"multi\nline",z\n'), [['a', 'b'], ['x, y', 'say "hi"'], ['multi\nline', 'z']]);
+    eq(CV.csvParse('\uFEFFa,b\r\n"x, y","say ""hi"""\n"multi\nline",z\n'), [['a', 'b'], ['x, y', 'say "hi"'], ['multi\nline', 'z']]);
   });
 
   test('csvParse detects semicolon-separated files (Excel in Spanish locales)', () => {
