@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>cv-builder tests</title>
+  <style>
+    body { font: 14px/1.5 system-ui, sans-serif; margin: 24px; color: #111; }
+    .summary { font-size: 18px; font-weight: 700; }
+    .good { color: #15803d; }
+    .bad { color: #b91c1c; }
+    ul { list-style: none; padding: 0; }
+    li::before { content: '✓ '; }
+    li.bad::before { content: '✗ '; }
+    pre { margin: 2px 0 8px 18px; white-space: pre-wrap; color: #7f1d1d; }
+  </style>
+</head>
+<body>
+  <h1>cv-builder unit tests</h1>
+  <p>Open this file in any browser, or run <code>node --test</code> from the repository root to run it in headless Chrome
+    together with the smoke tests.</p>
+  <div id="results">Running…</div>
+
+  <!-- The app modules, without js/app.js (which builds the UI on load) -->
+  <script src="../js/i18n.js"></script>
+  <script src="../js/schema.js"></script>
+  <script src="../js/core.js"></script>
+  <script src="../js/export.js"></script>
+  <script src="../js/render.js"></script>
+  <script src="../js/dates.js"></script>
+  <script src="../js/templates/harvard.js"></script>
+  <script src="../js/templates/modern.js"></script>
+  <script src="../js/templates/minimal.js"></script>
+
+  <script src="harness.js"></script>
+  <script src="specs/core.js"></script>
+  <script src="specs/schema.js"></script>
+  <script src="specs/i18n.js"></script>
+  <script src="specs/export.js"></script>
+  <script src="specs/dates.js"></script>
+  <script src="specs/templates.js"></script>
+  <script>T.run();</script>
+</body>
+</html>
