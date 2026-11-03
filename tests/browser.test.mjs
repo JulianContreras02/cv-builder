@@ -282,3 +282,57 @@ test('"Start from scratch" leaves a blank resume that prints without placeholder
   assert.equal(pdf.pages, 1);
   assert.deepEqual(page.errors, []);
 });
+
+/* ---------------- ATS tab ---------------- */
+async function openAts(lang, template) {
+  await openApp(lang, template);
+  await page.evaluate(`document.querySelector('.tabs [data-tab="ats"]').click()`);
+  await page.waitFor(`document.querySelectorAll('#panel-ats .ats-item').length > 0`);
+}
+const atsProblems = () => page.evaluate(`[...document.querySelectorAll('#panel-ats .ats-item:not(.level-ok)')].map((li) => li.dataset.id)`);
+const atsText = () => page.evaluate(`document.getElementById('atsText').textContent`);
+const clickFix = (id) => page.evaluate(`document.querySelector('#panel-ats .ats-item[data-id="${id}"] [data-ats-fix]').click()`);
+
+test('ATS tab: Harvard passes every check and its text starts with the name', { timeout: 30000 }, async () => {
+  await openAts('en', 'harvard');
+  assert.deepEqual(await atsProblems(), []);
+  assert.match(await atsText(), /^ALEX MORGAN\n/);
+  assert.deepEqual(page.errors, []);
+});
+
+test('ATS tab: Modern warns about two columns and the fix switches to Harvard', { timeout: 30000 }, async () => {
+  await openAts('en', 'modern');
+  assert.deepEqual(await atsProblems(), ['columns']);
+  assert.match(await atsText(), /^Austin, TX, USA\n/, 'the sidebar is read before the name');
+  await clickFix('columns');
+  await page.waitFor(`CV.state.settings.template === 'harvard' && !document.querySelector('#panel-ats .ats-item:not(.level-ok)')`);
+  assert.equal(await page.evaluate(`document.getElementById('templateSelect').value`), 'harvard');
+  assert.deepEqual(page.errors, []);
+});
+
+test('ATS tab: Minimal warns about letter-spaced headings and the fix turns the option off', { timeout: 30000 }, async () => {
+  await openAts('es', 'minimal');
+  assert.deepEqual(await atsProblems(), ['spacing']);
+  await clickFix('spacing');
+  await page.waitFor(`CV.state.settings.tpl.minimal.spacedHeadings === false && !document.querySelector('#panel-ats .ats-item:not(.level-ok)')`);
+  const spacing = await page.evaluate(`(() => {
+    const cs = getComputedStyle(document.querySelector('#sheet .cv-heading'));
+    return parseFloat(cs.letterSpacing) / parseFloat(cs.fontSize);
+  })()`);
+  assert.ok(spacing < 0.1, `heading letter spacing is now ${spacing.toFixed(2)} em`);
+  assert.ok(await page.evaluate('CV.canUndo()'), 'the fix can be undone');
+  assert.deepEqual(page.errors, []);
+});
+
+test('ATS tab: the review follows edits on the page and "Go to field" focuses the field', { timeout: 30000 }, async () => {
+  await openAts('en', 'harvard');
+  await page.evaluate(`(() => {
+    const el = document.querySelector('#sheet .ed[data-path="profile.email"]');
+    el.textContent = '';
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+  })()`);
+  await page.waitFor(`!!document.querySelector('#panel-ats .ats-item.level-error[data-id="email"]')`);
+  await clickFix('email');
+  assert.equal(await page.evaluate('document.activeElement && document.activeElement.dataset.path'), 'profile.email');
+  assert.deepEqual(page.errors, []);
+});

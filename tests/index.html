@@ -4,14 +4,16 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>cv-builder tests</title>
+  <!-- The page styles, so tests that read computed styles see the real rules -->
+  <link rel="stylesheet" href="../css/sheet.css">
   <style>
     body { font: 14px/1.5 system-ui, sans-serif; margin: 24px; color: #111; }
     .summary { font-size: 18px; font-weight: 700; }
     .good { color: #15803d; }
     .bad { color: #b91c1c; }
-    ul { list-style: none; padding: 0; }
-    li::before { content: '✓ '; }
-    li.bad::before { content: '✗ '; }
+    #results ul { list-style: none; padding: 0; }
+    #results li::before { content: '✓ '; }
+    #results li.bad::before { content: '✗ '; }
     pre { margin: 2px 0 8px 18px; white-space: pre-wrap; color: #7f1d1d; }
   </style>
 </head>
@@ -28,6 +30,7 @@
   <script src="../js/export.js"></script>
   <script src="../js/render.js"></script>
   <script src="../js/dates.js"></script>
+  <script src="../js/ats.js"></script>
   <script src="../js/templates/harvard.js"></script>
   <script src="../js/templates/modern.js"></script>
   <script src="../js/templates/minimal.js"></script>
@@ -39,6 +42,7 @@
   <script src="specs/export.js"></script>
   <script src="specs/dates.js"></script>
   <script src="specs/templates.js"></script>
+  <script src="specs/ats.js"></script>
   <script>T.run();</script>
 </body>
 </html>
