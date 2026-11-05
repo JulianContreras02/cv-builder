@@ -9,6 +9,8 @@
 
 **Demo en vivo: <https://juliancontreras02.github.io/cv-builder/>**
 
+[![Demostración de HojaDeVida: se edita un cargo sobre la hoja, se arrastra la sección Habilidades encima de Experiencia, se cambia entre las plantillas Harvard, Moderna y Minimalista, se corrige un aviso de espaciado en la pestaña ATS y se pulsa Guardar PDF](docs/demo-es.gif)](https://juliancontreras02.github.io/cv-builder/)
+
 Editor de hojas de vida (CV) que corre completamente en el navegador. Escribes directamente sobre
 la hoja, eliges una plantilla y guardas el PDF. No hay cuenta, servidor, muro de pago ni tarjeta de
 crédito: los datos se quedan en tu navegador y el PDF sale del diálogo de impresión, así que el
@@ -130,6 +132,9 @@ cv-builder/
 │   ├── harness.js          Arnés de pruebas mínimo, sin dependencias
 │   ├── specs/              Pruebas unitarias por módulo
 │   └── browser.test.mjs    Corre la página y las pruebas de humo en Chrome headless
+├── tools/
+│   ├── devtools.mjs        Servidor estático, arranque de Chrome y cliente DevTools (sin npm)
+│   └── record-demo.mjs     Graba docs/demo-en.gif y docs/demo-es.gif
 └── .github/workflows/
     └── ci.yml              Corre las pruebas y luego publica index.html, assets/, css/ y js/
 ```
@@ -189,8 +194,29 @@ node --test
 
 [`tests/browser.test.mjs`](tests/browser.test.mjs) levanta un servidor estático, abre Chrome, carga
 la página de pruebas y la app, y habla con Chrome por el protocolo DevTools usando el `WebSocket`
-que trae Node. La impresión usa el mismo motor que el "Guardar como PDF" de Chrome; el número de
-páginas y el tamaño del papel se leen directamente del PDF.
+que trae Node (las funciones de apoyo están en [`tools/devtools.mjs`](tools/devtools.mjs)). La
+impresión usa el mismo motor que el "Guardar como PDF" de Chrome; el número de páginas y el
+tamaño del papel se leen directamente del PDF.
+
+### GIF de demostración
+
+El GIF de arriba se graba desde la app real con la hoja de vida ficticia de ejemplo, así que se
+puede regenerar después de un cambio en la interfaz. Necesita Chrome y [FFmpeg](https://ffmpeg.org/)
+(o `FFMPEG_PATH`):
+
+```bash
+node tools/record-demo.mjs --lang es
+```
+
+```bash
+node tools/record-demo.mjs
+```
+
+[`tools/record-demo.mjs`](tools/record-demo.mjs) maneja el editor por el protocolo DevTools, toma
+los cuadros del screencast con sus tiempos reales y FFmpeg arma el GIF con su propia paleta. Dibuja
+un cursor y subtítulos encima, porque Chrome headless no pinta el puntero del mouse, y pone
+SortableJS en su modo alternativo (el que usa en pantallas táctiles) para que se vea el bloque que
+se arrastra. Si el arrastre no reordena o la página registra un error, falla en vez de escribir el GIF.
 
 ## Publicación
 

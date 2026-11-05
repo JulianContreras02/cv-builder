@@ -9,6 +9,8 @@
 
 **Live demo: <https://juliancontreras02.github.io/cv-builder/>**
 
+[![Demo of HojaDeVida: editing a job title on the page, dragging the Skills section above Experience, switching between the Harvard, Modern and Minimal templates, fixing a letter-spacing warning in the ATS tab, and clicking Save PDF](docs/demo-en.gif)](https://juliancontreras02.github.io/cv-builder/)
+
 A resume (CV) editor that runs entirely in the browser. You type directly on the page, pick a
 template, and save a PDF. There is no account, no server, no paywall and no credit card: the data
 stays in your own browser, and the PDF comes from the browser's print dialog, so the text is real,
@@ -125,6 +127,9 @@ cv-builder/
 │   ├── harness.js          Tiny test harness, no dependencies
 │   ├── specs/              Unit tests per module
 │   └── browser.test.mjs    Runs the page and smoke tests in headless Chrome
+├── tools/
+│   ├── devtools.mjs        Static server, Chrome launcher and DevTools client (no npm)
+│   └── record-demo.mjs     Records docs/demo-en.gif and docs/demo-es.gif
 └── .github/workflows/
     └── ci.yml              Runs the tests, then deploys index.html, assets/, css/ and js/
 ```
@@ -184,8 +189,27 @@ node --test
 
 [`tests/browser.test.mjs`](tests/browser.test.mjs) starts a static server, launches Chrome, opens
 the test page and the app, and talks to Chrome through the DevTools protocol with Node's built-in
-`WebSocket`. Printing uses the same engine as Chrome's "Save as PDF"; the page count and paper size
-are read straight from the PDF.
+`WebSocket` (the helpers live in [`tools/devtools.mjs`](tools/devtools.mjs)). Printing uses the same
+engine as Chrome's "Save as PDF"; the page count and paper size are read straight from the PDF.
+
+### Demo GIF
+
+The GIF at the top is recorded from the real app with the fictitious sample resume, so it can be
+regenerated after a UI change. It needs Chrome and [FFmpeg](https://ffmpeg.org/) (or `FFMPEG_PATH`):
+
+```bash
+node tools/record-demo.mjs
+```
+
+```bash
+node tools/record-demo.mjs --lang es
+```
+
+[`tools/record-demo.mjs`](tools/record-demo.mjs) drives the editor through the DevTools protocol,
+collects screencast frames with their real timing and lets FFmpeg build the GIF with its own palette.
+It draws a cursor and captions on top, because headless Chrome renders no mouse pointer, and switches
+SortableJS to its fallback mode (the one used on touch screens) so the dragged block is visible.
+It fails instead of writing a GIF if the drag does not reorder or the page logs an error.
 
 ## Deployment
 
