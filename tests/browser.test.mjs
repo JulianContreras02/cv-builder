@@ -2,144 +2,21 @@
 //
 //   node --test
 //
-// No npm packages: Node 22+ ships a WebSocket client, which is enough to drive
-// Chrome through the DevTools protocol. Chrome or Chromium must be installed;
+// No npm packages: tools/devtools.mjs drives Chrome through the DevTools protocol
+// with Node's built-in WebSocket (Node 22+). Chrome or Chromium must be installed;
 // set CHROME_PATH if it is not found in the usual places.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { createServer } from 'node:http';
-import { spawn } from 'node:child_process';
-import { existsSync } from 'node:fs';
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { extname, join, normalize, resolve, sep } from 'node:path';
+import { writeFile } from 'node:fs/promises';
+import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { connect, launchChrome, serve } from '../tools/devtools.mjs';
 
 const ROOT = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const TEMPLATES = ['harvard', 'modern', 'minimal'];
 const PAPER_MM = { A4: [210, 297], Letter: [215.9, 279.4] };
-const MIME = {
-  '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8',
-  '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.json': 'application/json',
-};
 
 let server, chrome, profileDir, page, base;
-
-/* ---------------- Static server for the repository ---------------- */
-function serve() {
-  const srv = createServer(async (req, res) => {
-    const path = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
-    const file = normalize(join(ROOT, path.endsWith('/') ? path + 'index.html' : path));
-    if (!file.startsWith(ROOT + sep)) return res.writeHead(403).end();
-    try {
-      const body = await readFile(file);
-      res.writeHead(200, { 'content-type': MIME[extname(file)] || 'application/octet-stream' }).end(body);
-    } catch {
-      res.writeHead(404).end('not found');
-    }
-  });
-  return new Promise((ok) => srv.listen(0, '127.0.0.1', () => ok(srv)));
-}
-
-/* ---------------- Chrome and a minimal DevTools protocol client ---------------- */
-function findChrome() {
-  const found = [
-    process.env.CHROME_PATH,
-    'C:/Program Files/Google/Chrome/Application/chrome.exe',
-    'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
-    '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
-    '/usr/bin/google-chrome', '/usr/bin/google-chrome-stable', '/usr/bin/chromium', '/usr/bin/chromium-browser',
-  ].find((p) => p && existsSync(p));
-  if (!found) throw new Error('Chrome not found; set CHROME_PATH to the browser executable');
-  return found;
-}
-
-const sleep = (ms) => new Promise((ok) => setTimeout(ok, ms));
-
-async function launchChrome() {
-  profileDir = await mkdtemp(join(tmpdir(), 'cv-builder-tests-'));
-  const args = ['--headless=new', '--remote-debugging-port=0', `--user-data-dir=${profileDir}`, '--no-first-run',
-    '--no-default-browser-check', '--disable-extensions', '--hide-scrollbars', '--window-size=1280,900'];
-  // GitHub's Ubuntu 24.04 runners block the user namespaces Chrome's sandbox needs.
-  if (process.env.CI) args.push('--no-sandbox', '--disable-dev-shm-usage');
-  chrome = spawn(findChrome(), [...args, 'about:blank'], { stdio: 'ignore' });
-  // With port 0 Chrome picks a free port and writes it to DevToolsActivePort.
-  for (let i = 0; i < 150; i++) {
-    try {
-      const [port] = (await readFile(join(profileDir, 'DevToolsActivePort'), 'utf8')).split('\n');
-      const targets = await (await fetch(`http://127.0.0.1:${port}/json/list`)).json();
-      const target = targets.find((t) => t.type === 'page');
-      if (target) return target.webSocketDebuggerUrl;
-    } catch { /* not ready yet */ }
-    await sleep(100);
-  }
-  throw new Error('Chrome did not start');
-}
-
-async function connect(wsUrl) {
-  const ws = new WebSocket(wsUrl);
-  await new Promise((ok, fail) => { ws.onopen = ok; ws.onerror = fail; });
-  let seq = 0;
-  const pending = new Map();
-  const listeners = new Set();
-  ws.onmessage = (e) => {
-    const msg = JSON.parse(e.data);
-    if (msg.id) {
-      const p = pending.get(msg.id);
-      pending.delete(msg.id);
-      if (msg.error) p.reject(new Error(msg.error.message)); else p.resolve(msg.result);
-    } else {
-      listeners.forEach((fn) => fn(msg));
-    }
-  };
-  const send = (method, params = {}) => new Promise((resolve, reject) => {
-    const id = ++seq;
-    pending.set(id, { resolve, reject });
-    ws.send(JSON.stringify({ id, method, params }));
-  });
-  const once = (method) => new Promise((ok) => {
-    const fn = (msg) => { if (msg.method === method) { listeners.delete(fn); ok(msg.params); } };
-    listeners.add(fn);
-  });
-
-  const errors = [];
-  const dialogs = [];
-  listeners.add((msg) => {
-    if (msg.method === 'Runtime.exceptionThrown') errors.push(msg.params.exceptionDetails.exception?.description || msg.params.exceptionDetails.text);
-    if (msg.method === 'Runtime.consoleAPICalled' && msg.params.type === 'error') errors.push('console.error: ' + msg.params.args.map((a) => a.value ?? a.description).join(' '));
-    // Failed requests to our own server count; third-party ones (CDN, fonts) are the network's business.
-    if (msg.method === 'Log.entryAdded' && msg.params.entry.level === 'error' && (!msg.params.entry.url || msg.params.entry.url.startsWith(base))) errors.push(msg.params.entry.text + ' ' + (msg.params.entry.url || ''));
-    // Accept confirm() dialogs (import, reset) like a user clicking OK.
-    if (msg.method === 'Page.javascriptDialogOpening') {
-      dialogs.push(msg.params.message);
-      send('Page.handleJavaScriptDialog', { accept: true });
-    }
-  });
-  await Promise.all([send('Page.enable'), send('Runtime.enable'), send('Log.enable'), send('DOM.enable')]);
-
-  const evaluate = async (expression) => {
-    const r = await send('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true });
-    if (r.exceptionDetails) throw new Error('evaluate failed: ' + (r.exceptionDetails.exception?.description || r.exceptionDetails.text));
-    return r.result.value;
-  };
-  return {
-    send, evaluate, errors, dialogs,
-    close: () => ws.close(),
-    async load(url) {
-      const loaded = once('Page.loadEventFired');
-      await send('Page.navigate', { url });
-      await loaded;
-    },
-    async waitFor(expression, ms = 5000) {
-      for (const end = Date.now() + ms; Date.now() < end; await sleep(50)) {
-        const v = await evaluate(expression);
-        if (v) return v;
-      }
-      throw new Error('timed out waiting for ' + expression);
-    },
-    reset() { errors.length = 0; dialogs.length = 0; },
-  };
-}
 
 /* ---------------- Helpers for the app ---------------- */
 /** Opens the editor with a fresh sample resume in `lang` and switches to `template`. */
@@ -195,16 +72,16 @@ async function printView() {
 
 /* ---------------- Setup ---------------- */
 before(async () => {
-  server = await serve();
-  base = `http://127.0.0.1:${server.address().port}/`;
-  page = await connect(await launchChrome());
+  ({ server, url: base } = await serve(ROOT));
+  chrome = await launchChrome();
+  profileDir = chrome.profileDir;
+  page = await connect(chrome.wsUrl, { origin: base });
 });
 
 after(async () => {
   page?.close();
-  chrome?.kill();
+  await chrome?.close();
   server?.close();
-  if (profileDir) await rm(profileDir, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 }).catch(() => {});
 });
 
 /* ---------------- Tests ---------------- */
