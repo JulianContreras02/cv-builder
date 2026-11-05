@@ -281,9 +281,35 @@ cambiar.
 3. Añade `<script src="js/templates/<id>.js"></script>` en `index.html` después de las otras
    plantillas.
 
-Aparecerá sola en el selector "Plantilla". El contrato mínimo está en el
-[README en inglés](README.md#adding-a-template) y comentado en `js/render.js`. Las variables CSS
-disponibles en la hoja son `--font`, `--fs`, `--fs-name`, `--fs-heading`, `--lh`, `--gap-section`,
+Aparecerá sola en el selector "Plantilla". Este es el contrato mínimo que necesita el núcleo:
+
+```js
+CV.registerTemplate({
+  id: 'modern',
+  name: { es: 'Moderna', en: 'Modern' },                          // o un texto simple
+  description: { es: '…', en: '…' },
+  defaults: { fontFamily: 'Arial, sans-serif', fontSize: 10.5 },   // opcional
+  options: [                                                       // opcional
+    { key: 'accentBar', type: 'toggle', default: true, label: { es: 'Barra de color', en: 'Color bar' } },
+    { key: 'cols', type: 'select', default: '1', label: { es: 'Columnas', en: 'Columns' },
+      choices: [{ value: '1', label: '1' }, { value: '2', label: '2' }] },
+  ],
+  css: '.tpl-modern .cv-heading { … }',
+  render(state, h, opt) {
+    // 1) Un contenedor de secciones marcado con data-sections (lo necesita el arrastre).
+    // 2) Cada sección con h.section(sec, i, html) y su título con h.heading(sec, i).
+    // 3) Las entradas con h.items(sec, i, (item, basePath) => html) y los textos con
+    //    h.ed(path, valor, {cls, ph}) o h.rich(path, valor, {cls, ph}).
+    // 4) La foto con h.photo().
+    const secs = state.sections.map((sec, i) => sec.visible === false ? '' :
+      h.section(sec, i, h.heading(sec, i) + this.renderBody(sec, i, h))).join('');
+    return '<div class="tpl-modern" data-sections>' + header + secs + '</div>';
+  },
+});
+```
+
+Los ayudantes `h.*` están definidos y comentados en `js/render.js`. Las variables CSS disponibles
+en la hoja son `--font`, `--fs`, `--fs-name`, `--fs-heading`, `--lh`, `--gap-section`,
 `--gap-item`, `--text`, `--accent`, `--photo-size` y los márgenes `--m-*`.
 
 Una plantilla a dos columnas tiene dos contenedores `data-sections` (ver `modern.js`): cada uno
